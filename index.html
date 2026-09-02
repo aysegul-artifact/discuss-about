@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discuss About Tally</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #E4E6E1; --surface: #F3F4F0; --line: #C9CDC5;
+    --ink: #191C19; --muted: #6B7169; --accent: #D8342A;
+    --display: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+    --body: "IBM Plex Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #131614; --surface: #1C201D; --line: #2E332F;
+      --ink: #E8EBE5; --muted: #8B928A; --accent: #FF5247;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #131614; --surface: #1C201D; --line: #2E332F;
+    --ink: #E8EBE5; --muted: #8B928A; --accent: #FF5247;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground); color: var(--ink); font-family: var(--body);
+    margin: 0; padding: 28px 20px 56px; display: flex; justify-content: center;
+  }
+  main { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 20px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 8vw, 46px); line-height: .98; margin: 6px 0 0; text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 20px; }
+  .board { display: flex; flex-direction: column; gap: 16px; }
+  .board-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .board-count { font-family: var(--mono); font-weight: 600; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--accent); margin: 0; }
+  .marks { display: flex; flex-wrap: wrap; gap: 14px; min-height: 46px; align-items: center; }
+  .group { position: relative; display: flex; gap: 5px; height: 38px; }
+  .group i { display: block; width: 3px; border-radius: 2px; background: var(--ink); height: 100%; }
+  .group.five::after { content: ""; position: absolute; left: -5px; right: -5px; background: var(--accent); height: 3px; border-radius: 2px; top: 50%; transform: rotate(-24deg); }
+  .marks .empty { color: var(--muted); font-size: 14px; }
+  .overflow { font-family: var(--mono); font-size: 14px; color: var(--muted); align-self: center; }
+  button.press {
+    font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5vw, 26px);
+    color: var(--surface); background: var(--accent); border: none; border-radius: 4px;
+    padding: 26px 20px; width: 100%; cursor: pointer; transition: transform .08s ease, filter .12s ease;
+  }
+  button.press:hover { filter: brightness(1.06); }
+  button.press:active { transform: scale(.985); }
+  button.press:disabled { background: var(--line); color: var(--muted); cursor: default; }
+  button.press:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .hint { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .hint .warn { color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .stat { background: var(--surface); padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .stat b { font-family: var(--mono); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat span { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  @media (max-width: 460px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .chart { display: flex; flex-direction: column; gap: 12px; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+  .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; height: 100%; }
+  .bar u { display: block; background: var(--line); border-radius: 2px 2px 0 0; min-height: 2px; text-decoration: none; }
+  .bar.today u { background: var(--accent); }
+  .bar.hot u { background: var(--muted); }
+  .bar em { font-family: var(--mono); font-style: normal; font-size: 9px; text-align: center; color: var(--muted); }
+  .bar strong { font-family: var(--mono); font-size: 10px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .foot { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  @media (prefers-reduced-motion: reduce) { button.press { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">office telemetry &middot; shared board</p>
+    <h1>Let's <em>discuss about</em> that</h1>
+  </header>
+
+  <section class="card board">
+    <div class="board-head">
+      <p class="eyebrow">today</p>
+      <p class="board-count" id="todayCount">&mdash;</p>
+    </div>
+    <div class="marks" id="marks"></div>
+  </section>
+
+  <button class="press" id="press" disabled>Loading&hellip;</button>
+  <div class="hint">
+    <span>press <b>space</b> to tally</span>
+    <span id="status">connecting</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sAll">&mdash;</b><span>all time</span></div>
+    <div class="stat"><b id="sWeek">&mdash;</b><span>last 7 days</span></div>
+    <div class="stat"><b id="sBest">&mdash;</b><span>record (14d)</span></div>
+    <div class="stat"><b id="sStreak">&mdash;</b><span>day streak</span></div>
+  </div>
+
+  <section class="card chart">
+    <p class="eyebrow">last 14 days</p>
+    <div class="bars" id="bars"></div>
+  </section>
+
+  <p class="foot">Shared board &mdash; whoever has this link presses into the same count, refreshed every 10 seconds. Keep the tab in a corner and hit space when it lands.</p>
+</main>
+
+<script>
+(function () {
+  var NS = "discuss-about-1f2799d8";
+  var API = "https://abacus.jasoncameron.dev";
+  var DAY = 86400000;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var days = {};       // "YYYY-MM-DD" -> count (last 14 days only)
+  var total = 0;       // separate all-time key, so history older than the window still counts
+  var pending = 0;     // presses in flight; polling must not overwrite them
+
+  function key(ms) {
+    var d = new Date(ms);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  // resolves to a number, or null when the request itself failed.
+  // a key nobody has hit yet answers {"error":"Key not found"} -> 0
+  function ask(path, k) {
+    return fetch(API + "/" + path + "/" + NS + "/" + k)
+      .then(function (r) { return r.json(); })
+      .then(function (j) { return j && typeof j.value === "number" ? j.value : 0; })
+      .catch(function () { return null; });
+  }
+
+  function setStatus(text, warn) {
+    var el = $("status");
+    el.textContent = text;
+    el.className = warn ? "warn" : "";
+  }
+
+  function render() {
+    var todayKey = key(Date.now());
+    var today = days[todayKey] || 0;
+    $("todayCount").textContent = today;
+
+    var marks = $("marks");
+    marks.textContent = "";
+    if (!today) {
+      var q = document.createElement("span");
+      q.className = "empty";
+      q.textContent = "Silence. Suspicious.";
+      marks.appendChild(q);
+    }
+    var shown = Math.min(today, 60);
+    for (var i = 0; i < shown; i += 5) {
+      var size = Math.min(5, shown - i);
+      var g = document.createElement("div");
+      g.className = "group" + (size === 5 ? " five" : "");
+      for (var j = 0; j < Math.min(size, 4); j++) g.appendChild(document.createElement("i"));
+      marks.appendChild(g);
+    }
+    if (today > shown) {
+      var over = document.createElement("span");
+      over.className = "overflow";
+      over.textContent = "+" + (today - shown);
+      marks.appendChild(over);
+    }
+
+    var week = 0, best = 0, streak = 0;
+    for (var d = 0; d < 7; d++) week += days[key(Date.now() - d * DAY)] || 0;
+    for (var b = 0; b < 14; b++) best = Math.max(best, days[key(Date.now() - b * DAY)] || 0);
+    for (var s = 0; s < 14; s++) {
+      if ((days[key(Date.now() - s * DAY)] || 0) > 0) streak++;
+      else if (s > 0) break;          // an empty today doesn't break yesterday's streak
+    }
+
+    $("sAll").textContent = total;
+    $("sWeek").textContent = week;
+    $("sBest").textContent = best;
+    $("sStreak").textContent = streak;
+
+    var bars = $("bars");
+    bars.textContent = "";
+    var span = [];
+    for (var w = 13; w >= 0; w--) span.push(Date.now() - w * DAY);
+    var max = Math.max(1, Math.max.apply(null, span.map(function (t) { return days[key(t)] || 0; })));
+    span.forEach(function (t) {
+      var n = days[key(t)] || 0;
+      var el = document.createElement("div");
+      el.className = "bar" + (key(t) === todayKey ? " today" : n === max && n > 0 ? " hot" : "");
+      el.title = key(t) + ": " + n;
+      var val = document.createElement("strong");
+      val.textContent = n || "";
+      var bar = document.createElement("u");
+      bar.style.height = (n / max * 82) + "%";
+      var lab = document.createElement("em");
+      lab.textContent = new Date(t).toLocaleDateString(undefined, { weekday: "narrow" });
+      el.appendChild(val); el.appendChild(bar); el.appendChild(lab);
+      bars.appendChild(el);
+    });
+  }
+
+  function loadAll() {
+    var wanted = [];
+    for (var i = 0; i < 14; i++) wanted.push(key(Date.now() - i * DAY));
+    return Promise.all(wanted.map(function (k) { return ask("get", k); })
+      .concat([ask("get", "total")]))
+      .then(function (vals) {
+        var totalVal = vals.pop();
+        if (vals.every(function (v) { return v === null; })) throw new Error("offline");
+        wanted.forEach(function (k, i) { if (vals[i] !== null) days[k] = vals[i]; });
+        if (totalVal !== null) total = totalVal;
+        render();
+      });
+  }
+
+  function press() {
+    var k = key(Date.now());
+    days[k] = (days[k] || 0) + 1;      // optimistic: the number moves the instant you click
+    total += 1;
+    render();
+    pending++;
+    Promise.all([ask("hit", k), ask("hit", "total")]).then(function (r) {
+      pending--;
+      if (r[0] === null || r[1] === null) { setStatus("not saved — check connection", true); return; }
+      days[k] = r[0]; total = r[1];
+      setStatus("live");
+      render();
+    });
+  }
+
+  $("press").addEventListener("click", press);
+  document.addEventListener("keydown", function (e) {
+    if (e.code !== "Space" || e.repeat || $("press").disabled) return;
+    e.preventDefault();
+    press();
+  });
+
+  loadAll().then(function () {
+    $("press").disabled = false;
+    $("press").textContent = "He said it";
+    setStatus("live");
+  }, function () {
+    setStatus("can't reach the counter", true);
+    $("press").textContent = "Offline";
+  });
+
+  setInterval(function () {
+    if (pending) return;              // don't clobber a press still in flight
+    var k = key(Date.now());
+    Promise.all([ask("get", k), ask("get", "total")]).then(function (r) {
+      if (r[0] === null) { setStatus("reconnecting", true); return; }
+      days[k] = r[0];
+      if (r[1] !== null) total = r[1];
+      setStatus("live");
+      render();
+    });
+  }, 10000);
+})();
+</script>
+</body>
+</html>
